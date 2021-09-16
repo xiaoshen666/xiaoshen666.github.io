@@ -65,10 +65,10 @@
         
           <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
         
-        <a id="nav-search-btn" class="nav-icon" title="Suche"></a>
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
       </nav>
       <div id="search-form-wrap">
-        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Suche"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://www.oracp.com"></form>
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://www.oracp.com"></form>
       </div>
     </div>
   </div>
@@ -164,14 +164,14 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public static ClassLoader getAppClassLoader(final ClassLoader extcl)</span><br><span class="line">            throws IOException &#123;</span><br><span class="line">    final String s &#x3D; System.getProperty(&quot;java.class.path&quot;);</span><br><span class="line">    final File[] path &#x3D; (s &#x3D;&#x3D; null) ? new File[0] : getClassPath(s);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; Note: on bugid 4256530</span><br><span class="line">    &#x2F;&#x2F; Prior implementations of this doPrivileged() block supplied</span><br><span class="line">    &#x2F;&#x2F; a rather restrictive ACC via a call to the private method</span><br><span class="line">    &#x2F;&#x2F; AppClassLoader.getContext(). This proved overly restrictive</span><br><span class="line">    &#x2F;&#x2F; when loading  classes. Specifically it prevent</span><br><span class="line">    &#x2F;&#x2F; accessClassInPackage.sun.* grants from being honored.</span><br><span class="line">    &#x2F;&#x2F;</span><br><span class="line">    return AccessController.doPrivileged(</span><br><span class="line">        new PrivilegedAction&lt;AppClassLoader&gt;() &#123;</span><br><span class="line">            public AppClassLoader run() &#123;</span><br><span class="line">                URL[] urls &#x3D;</span><br><span class="line">                    (s &#x3D;&#x3D; null) ? new URL[0] : pathToURLs(path);</span><br><span class="line">                return new AppClassLoader(urls, extcl);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">&#125;</span><br><span class="line">        </span><br><span class="line">AppClassLoader(URL[] urls, ClassLoader parent) &#123;</span><br><span class="line">    super(urls, parent, factory);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>应用类、扩展类加载器的父子关系就是这样建立的</p>
-<h2 id="类加载器加载的类如何存储"><a href="#类加载器加载的类如何存储" class="headerlink" title="类加载器加载的类如何存储"></a>类加载器加载的类如何存储</h2><h2 id="双亲委派"><a href="#双亲委派" class="headerlink" title="双亲委派"></a>双亲委派</h2><p>如果一个类加载器收到了加载某个类的请求,则该类加载器并不会去加载该类,而是把这个请求委派给父类加载器,每一个层次的类加载器都是如此,因此所有的类加载请求最终都会传送到顶端的启动类加载器;只有当父类加载器在其搜索范围内无法找到所需的类,并将该结果反馈给子类加载器,子类加载器会尝试去自己加载。</p>
+<h2 id="类加载器加载的类如何存储"><a href="#类加载器加载的类如何存储" class="headerlink" title="类加载器加载的类如何存储"></a>类加载器加载的类如何存储</h2><p><img src="/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/006b.png" alt="006b"></p>
+<h2 id="双亲委派"><a href="#双亲委派" class="headerlink" title="双亲委派"></a>双亲委派</h2><p>如果一个类加载器收到了加载某个类的请求,则该类加载器并不会去加载该类,而是把这个请求委派给父类加载器,每一个层次的类加载器都是如此,因此所有的类加载请求最终都会传送到顶端的启动类加载器;只有当父类加载器在其搜索范围内无法找到所需的类,并将该结果反馈给子类加载器,子类加载器会尝试去自己加载。</p>
 <p>每个类加载器的搜索范围上面已经讲过了</p>
+<p><img src="/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/778.png" alt="778"></p>
 <h2 id="打破双亲委派"><a href="#打破双亲委派" class="headerlink" title="打破双亲委派"></a>打破双亲委派</h2><p>因为在某些情况下父类加载器需要委托子类加载器去加载class文件。受到加载范围的限制，父类加载器无法加载到需要的文件，以Driver接口为例，由于Driver接口定义在jdk当中的，而其实现由各个数据库的服务商来提供，比如mysql的就写了<code>MySQL Connector</code>，那么问题就来了，DriverManager（也由jdk提供）要加载各个实现了Driver接口的实现类，然后进行管理，但是DriverManager由启动类加载器加载，只能记载JAVA_HOME的lib下文件，而其实现是由服务商提供的，由系统类加载器加载，这个时候就需要启动类加载器来委托子类来加载Driver实现，从而破坏了双亲委派。</p>
 <p>类似这样的情况就需要打破双亲委派。</p>
 <p>打破双亲委派的意思其实就是不委派、向下委派</p>
-<h3 id="自定义类加载器-1"><a href="#自定义类加载器-1" class="headerlink" title="自定义类加载器"></a>自定义类加载器</h3><p><strong>具体细节见课堂上操作实战</strong></p>
-<h3 id="SPI"><a href="#SPI" class="headerlink" title="SPI"></a>SPI</h3><p>是一种服务发现机制。它通过在ClassPath路径下的META-INF/services文件夹查找文件，自动加载文件里所定义的类。这一机制为很多框架扩展提供了可能，比如在Dubbo、JDBC中都使用到了SPI机制</p>
-<p><strong>具体细节见课堂上操作实战</strong></p>
+<h3 id="自定义类加载器-1"><a href="#自定义类加载器-1" class="headerlink" title="自定义类加载器"></a>自定义类加载器</h3><h3 id="SPI"><a href="#SPI" class="headerlink" title="SPI"></a>SPI</h3><p>是一种服务发现机制。它通过在ClassPath路径下的META-INF/services文件夹查找文件，自动加载文件里所定义的类。这一机制为很多框架扩展提供了可能，比如在Dubbo、JDBC中都使用到了SPI机制</p>
 <h2 id="线程上下文类加载器"><a href="#线程上下文类加载器" class="headerlink" title="线程上下文类加载器"></a>线程上下文类加载器</h2><p>1、是什么</p>
 <p>一种特殊的类加载器，可以通过Thread获取，基于此可实现逆向委托加载</p>
 <p>2、为什么</p>
@@ -182,17 +182,21 @@
 
 
 <h2 id="沙箱安全"><a href="#沙箱安全" class="headerlink" title="沙箱安全"></a>沙箱安全</h2><p>跟Linux的权限机制有点像</p>
+<p><img src="/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/1596186739409-9de7875f-b980-40cf-a392-e7218ee1a7d8.png" alt="1596186739409-9de7875f-b980-40cf-a392-e7218ee1a7d8"></p>
 <hr>
 <p>看openjdk源码会看到有这样的判断AccessController.doPrivileged</p>
+<p><img src="/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/1596186486602-8ec36a19-d6c9-4914-967c-a223ba45aafb.png" alt="1596186486602-8ec36a19-d6c9-4914-967c-a223ba45aafb"></p>
 <hr>
 <p>随便搜了一下，35个文件有80处安全判断</p>
+<p><img src="/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/1596186837719-26edf8c5-2f06-489d-89cf-80ac278e51f6.png" alt="1596186837719-26edf8c5-2f06-489d-89cf-80ac278e51f6"></p>
 <hr>
 <p>比如我定义了一个类名为String所在包为java.lang，因为这个类本来是属于jdk的，如果没有沙箱安全机制的话，这个类将会污染到我所有的String,但是由于沙箱安全机制，所以就委托顶层的bootstrap加载器查找这个类，如果没有的话就委托extsion,extsion没有就到aapclassloader，但是由于String就是jdk的源代码，所以在bootstrap那里就加载到了，先找到先使用，所以就使用bootstrap里面的String,后面的一概不能使用，这就保证了不被恶意代码污染</p>
-<h2 id="练习"><a href="#练习" class="headerlink" title="练习"></a>练习</h2>
+<p><img src="/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/1596186237329-9d5d9073-ce88-4836-8a5c-f6c5be51aeef.png" alt="1596186237329-9d5d9073-ce88-4836-8a5c-f6c5be51aeef"></p>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/" data-id="cktn3jrj30005bw2jhjbo4n5y" data-title="jvm2类加载器子系统与SPI" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/" data-id="cktn419b30004202j0bjkg4vx" data-title="jvm2类加载器子系统与SPI" class="article-share-link">Share</a>
       
       
       
@@ -231,63 +235,12 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2021/09/16/%E4%BD%99%E7%94%9F%E6%89%80%E9%81%87%E4%B9%8B%E4%BA%BA%EF%BC%8C%E9%83%BD%E6%98%AF%E5%A5%BD%E4%BA%BA/" data-id="cktn3jrj50009bw2j0ht34961" data-title="余生所遇之人，都是好人" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2021/09/16/%E4%BD%99%E7%94%9F%E6%89%80%E9%81%87%E4%B9%8B%E4%BA%BA%EF%BC%8C%E9%83%BD%E6%98%AF%E5%A5%BD%E4%BA%BA/" data-id="cktn419b50008202j7ls72u3o" data-title="余生所遇之人，都是好人" class="article-share-link">Share</a>
       
       
       
   <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E4%BA%BA%E7%94%9F%E6%84%9F%E6%82%9F/" rel="tag">人生感悟</a></li></ul>
 
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-hello-world" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2021/02/26/hello-world/" class="article-date">
-  <time class="dt-published" datetime="2021-02-25T16:37:08.139Z" itemprop="datePublished">2021-02-26</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/02/26/hello-world/">Hello World</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2021/02/26/hello-world/" data-id="cktn3jriy0001bw2j2rhm7pnh" data-title="Hello World" class="article-share-link">Teilen</a>
-      
-      
-      
     </footer>
   </div>
   
@@ -325,7 +278,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2020/09/15/%E4%BA%BA%E7%9A%84%E8%BF%99%E4%B8%80%E7%94%9F/" data-id="cktn3jrj40008bw2jebk62tdk" data-title="人的这一生" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2020/09/15/%E4%BA%BA%E7%9A%84%E8%BF%99%E4%B8%80%E7%94%9F/" data-id="cktn419b30005202je3tw417e" data-title="人的这一生" class="article-share-link">Share</a>
       
       
       
@@ -366,7 +319,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2019/11/16/%E5%AF%B9%E5%BE%85%E5%AD%A4%E7%8B%AC/" data-id="cktn3jrj6000bbw2j0puac37h" data-title="对待孤独" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2019/11/16/%E5%AF%B9%E5%BE%85%E5%AD%A4%E7%8B%AC/" data-id="cktn419b6000a202j4idrcfzd" data-title="对待孤独" class="article-share-link">Share</a>
       
       
       
@@ -408,7 +361,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2019/08/26/%E6%93%8D%E4%BD%9Cjar%E5%8C%85%E5%86%85%E6%96%87%E4%BB%B6%E4%BB%A5%E5%8F%8Ajar%E5%8C%85%E5%86%85jar%E5%8C%85%E9%87%8C%E6%96%87%E4%BB%B6%E7%9A%84%E6%96%B9%E6%B3%95/" data-id="cktn3jrja000gbw2jgclj021a" data-title="操作jar包内文件以及jar包内jar包里文件的方法" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2019/08/26/%E6%93%8D%E4%BD%9Cjar%E5%8C%85%E5%86%85%E6%96%87%E4%BB%B6%E4%BB%A5%E5%8F%8Ajar%E5%8C%85%E5%86%85jar%E5%8C%85%E9%87%8C%E6%96%87%E4%BB%B6%E7%9A%84%E6%96%B9%E6%B3%95/" data-id="cktn419b9000g202jhdzn9rl4" data-title="操作jar包内文件以及jar包内jar包里文件的方法" class="article-share-link">Share</a>
       
       
       
@@ -450,7 +403,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2019/06/16/hexo%E5%9B%BE%E7%89%87%E5%A6%82%E4%BD%95%E6%8F%92%E5%85%A5/" data-id="cktn3jrj10003bw2jfxhyba41" data-title="hexo图片如何插入" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2019/06/16/hexo%E5%9B%BE%E7%89%87%E5%A6%82%E4%BD%95%E6%8F%92%E5%85%A5/" data-id="cktn419az0001202je4al72bv" data-title="hexo图片如何插入" class="article-share-link">Share</a>
       
       
       
@@ -557,7 +510,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2019/01/11/jvm1%E5%B8%A6%E4%BD%A0%E6%8E%A2%E7%B4%A2JVM%E5%BA%95%E5%B1%82%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD/" data-id="cktn3jrj20004bw2jatj42a6e" data-title="jvm1带你探索JVM底层之类加载" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2019/01/11/jvm1%E5%B8%A6%E4%BD%A0%E6%8E%A2%E7%B4%A2JVM%E5%BA%95%E5%B1%82%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD/" data-id="cktn419b20003202jb5vi8yse" data-title="jvm1带你探索JVM底层之类加载" class="article-share-link">Share</a>
       
       
       
@@ -600,7 +553,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2018/11/16/20%E5%88%B030%E5%B2%81/" data-id="cktn3jriu0000bw2jc8q82emu" data-title="20到30岁" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2018/11/16/20%E5%88%B030%E5%B2%81/" data-id="cktn419au0000202j4fwed5h4" data-title="20到30岁" class="article-share-link">Share</a>
       
       
       
@@ -779,7 +732,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2018/11/16/%E6%AF%95%E4%B8%9A%E5%90%8E%E6%88%91%E4%BB%AC%E4%B8%A2%E5%A4%B1%E7%9A%84%E4%B8%89%E4%BB%B6%E4%B8%9C%E8%A5%BF/" data-id="cktn3jrj9000fbw2jegi093ew" data-title="毕业后我们丢失的三件东西" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2018/11/16/%E6%AF%95%E4%B8%9A%E5%90%8E%E6%88%91%E4%BB%AC%E4%B8%A2%E5%A4%B1%E7%9A%84%E4%B8%89%E4%BB%B6%E4%B8%9C%E8%A5%BF/" data-id="cktn419b8000e202jcoiv2zyd" data-title="毕业后我们丢失的三件东西" class="article-share-link">Share</a>
       
       
       
@@ -823,9 +776,9 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Archiv</h3>
+    <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">February 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/09/">September 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">January 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">November 2018</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/09/">September 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">January 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">November 2018</a></li></ul>
     </div>
   </div>
 
@@ -833,7 +786,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">letzter Beitrag</h3>
+    <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
         
@@ -846,15 +799,15 @@
           </li>
         
           <li>
-            <a href="/2021/02/26/hello-world/">Hello World</a>
-          </li>
-        
-          <li>
             <a href="/2020/09/15/%E4%BA%BA%E7%9A%84%E8%BF%99%E4%B8%80%E7%94%9F/">人的这一生</a>
           </li>
         
           <li>
             <a href="/2019/11/16/%E5%AF%B9%E5%BE%85%E5%AD%A4%E7%8B%AC/">对待孤独</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/26/%E6%93%8D%E4%BD%9Cjar%E5%8C%85%E5%86%85%E6%96%87%E4%BB%B6%E4%BB%A5%E5%8F%8Ajar%E5%8C%85%E5%86%85jar%E5%8C%85%E9%87%8C%E6%96%87%E4%BB%B6%E7%9A%84%E6%96%B9%E6%B3%95/">操作jar包内文件以及jar包内jar包里文件的方法</a>
           </li>
         
       </ul>
