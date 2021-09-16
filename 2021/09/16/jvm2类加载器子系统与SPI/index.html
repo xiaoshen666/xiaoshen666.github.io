@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>jvm2类加载器子系统与SPI | 小神的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="类加载器子系统分两节课讲解：类加载、类加载器 上节课已经深入讲解了类加载，这节课开始讲解类加载器 类加载器子系统 &#x3D; 三层类加载器 + 双亲委派 类加载器JVM中有两种类型的类加载器，由C++编写的及由Java编写的。除了启动类加载器（Bootstrap Class Loader）是由C++编写的，其他都是由Java编写的。由Java编写的类加载器都继承自类java.lang.ClassLoade">
+<meta property="og:type" content="article">
+<meta property="og:title" content="jvm2类加载器子系统与SPI">
+<meta property="og:url" content="http://www.oracp.com/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/index.html">
+<meta property="og:site_name" content="小神的博客">
+<meta property="og:description" content="类加载器子系统分两节课讲解：类加载、类加载器 上节课已经深入讲解了类加载，这节课开始讲解类加载器 类加载器子系统 &#x3D; 三层类加载器 + 双亲委派 类加载器JVM中有两种类型的类加载器，由C++编写的及由Java编写的。除了启动类加载器（Bootstrap Class Loader）是由C++编写的，其他都是由Java编写的。由Java编写的类加载器都继承自类java.lang.ClassLoade">
+<meta property="og:locale">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596175705729-ab0a19e3-d881-48fb-8b68-426b0e6c34e1.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
+<meta property="og:image" content="http://www.oracp.com/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/1596175705729-ab0a19e3-d881-48fb-8b68-426b0e6c34e1.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596463976492-938880f6-1716-42dd-bcde-4633bca14ebb.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596180175129-101a7451-64b8-4d6a-8ae9-49f915f6df34.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186739409-9de7875f-b980-40cf-a392-e7218ee1a7d8.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186486602-8ec36a19-d6c9-4914-967c-a223ba45aafb.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186837719-26edf8c5-2f06-489d-89cf-80ac278e51f6.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186237329-9d5d9073-ce88-4836-8a5c-f6c5be51aeef.png">
+<meta property="article:published_time" content="2021-09-16T14:25:09.000Z">
+<meta property="article:modified_time" content="2021-09-16T14:27:31.904Z">
+<meta property="article:author" content="Zhiqiang Shen">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596175705729-ab0a19e3-d881-48fb-8b68-426b0e6c34e1.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
+  
+    <link rel="alternate" href="/atom.xml" title="小神的博客" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">小神的博客</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">如果你是一个技术的痴迷者，这里让你不虚此行</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Suche"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Suche"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://www.oracp.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-jvm2类加载器子系统与SPI" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/" class="article-date">
+  <time class="dt-published" datetime="2021-09-16T14:25:09.000Z" itemprop="datePublished">2021-09-16</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      jvm2类加载器子系统与SPI
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>类加载器子系统分两节课讲解：类加载、类加载器</p>
+<p>上节课已经深入讲解了类加载，这节课开始讲解类加载器</p>
+<p>类加载器子系统 = 三层类加载器 + 双亲委派</p>
+<h2 id="类加载器"><a href="#类加载器" class="headerlink" title="类加载器"></a>类加载器</h2><p>JVM中有两种类型的类加载器，由C++编写的及由Java编写的。除了启动类加载器（Bootstrap Class Loader）是由C++编写的，其他都是由Java编写的。由Java编写的类加载器都继承自类java.lang.ClassLoader。</p>
+<p>JVM还支持自定义类加载器。后面会将。</p>
+<p>各种类加载器之间存在着逻辑上的父子关系，但不是真正意义上的父子关系，因为它们直接没有从属关系。</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596175705729-ab0a19e3-d881-48fb-8b68-426b0e6c34e1.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="img"></p>
+<p><img src="./jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/1596175705729-ab0a19e3-d881-48fb-8b68-426b0e6c34e1.png" alt="1596175705729-ab0a19e3-d881-48fb-8b68-426b0e6c34e1"></p>
+<h4 id="启动类加载器"><a href="#启动类加载器" class="headerlink" title="启动类加载器"></a>启动类加载器</h4><p>因为启动类加载器是由C++编写的，通过Java程序去查看显示的是null</p>
+<p>因此，启动类加载器无法被Java程序调用</p>
+<p>启动类加载器不像其他类加载器有实体，它是没有实体的，JVM将C++处理类加载的一套逻辑定义为启动类加载器</p>
+<hr>
+<p>查看启动类加载器的加载路径</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">URL[] urLs &#x3D; Launcher.getBootstrapClassPath().getURLs();</span><br><span class="line">for (URL urL : urLs) &#123;</span><br><span class="line">    System.out.println(urL);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>也可以通过-Xbootclasspath指定</p>
+<hr>
+<p>从openjdk源码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br></pre></td><td class="code"><pre><span class="line">int JNICALL</span><br><span class="line">JavaMain(void * _args)</span><br><span class="line">&#123;</span><br><span class="line">	……</span><br><span class="line">    mainClass &#x3D; LoadMainClass(env, mode, what);</span><br><span class="line">    ……</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static jclass</span><br><span class="line">LoadMainClass(JNIEnv *env, int mode, char *name)</span><br><span class="line">&#123;</span><br><span class="line">    jmethodID mid;</span><br><span class="line">    jstring str;</span><br><span class="line">    jobject result;</span><br><span class="line">    jlong start, end;</span><br><span class="line">    jclass cls &#x3D; GetLauncherHelperClass(env);</span><br><span class="line">    NULL_CHECK0(cls);</span><br><span class="line">    if (JLI_IsTraceLauncher()) &#123;</span><br><span class="line">        start &#x3D; CounterGet();</span><br><span class="line">    &#125;</span><br><span class="line">    NULL_CHECK0(mid &#x3D; (*env)-&gt;GetStaticMethodID(env, cls,</span><br><span class="line">                &quot;checkAndLoadMain&quot;,</span><br><span class="line">                &quot;(ZILjava&#x2F;lang&#x2F;String;)Ljava&#x2F;lang&#x2F;Class;&quot;));</span><br><span class="line"></span><br><span class="line">    str &#x3D; NewPlatformString(env, name);</span><br><span class="line">    CHECK_JNI_RETURN_0(</span><br><span class="line">        result &#x3D; (*env)-&gt;CallStaticObjectMethod(</span><br><span class="line">            env, cls, mid, USE_STDERR, mode, str));</span><br><span class="line"></span><br><span class="line">    if (JLI_IsTraceLauncher()) &#123;</span><br><span class="line">        end   &#x3D; CounterGet();</span><br><span class="line">        printf(&quot;%ld micro seconds to load main class\n&quot;,</span><br><span class="line">               (long)(jint)Counter2Micros(end-start));</span><br><span class="line">        printf(&quot;----%s----\n&quot;, JLDEBUG_ENV_ENTRY);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return (jclass)result;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">jclass</span><br><span class="line">GetLauncherHelperClass(JNIEnv *env)</span><br><span class="line">&#123;</span><br><span class="line">    if (helperClass &#x3D;&#x3D; NULL) &#123;</span><br><span class="line">        NULL_CHECK0(helperClass &#x3D; FindBootStrapClass(env,</span><br><span class="line">                &quot;sun&#x2F;launcher&#x2F;LauncherHelper&quot;));</span><br><span class="line">    &#125;</span><br><span class="line">    return helperClass;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">jclass</span><br><span class="line">FindBootStrapClass(JNIEnv *env, const char* classname)</span><br><span class="line">&#123;</span><br><span class="line">   if (findBootClass &#x3D;&#x3D; NULL) &#123;</span><br><span class="line">       findBootClass &#x3D; (FindClassFromBootLoader_t *)dlsym(RTLD_DEFAULT,</span><br><span class="line">          &quot;JVM_FindClassFromBootLoader&quot;);</span><br><span class="line">       if (findBootClass &#x3D;&#x3D; NULL) &#123;</span><br><span class="line">           JLI_ReportErrorMessage(DLL_ERROR4,</span><br><span class="line">               &quot;JVM_FindClassFromBootLoader&quot;);</span><br><span class="line">           return NULL;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   return findBootClass(env, classname);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">JVM_ENTRY(jclass, JVM_FindClassFromBootLoader(JNIEnv* env,</span><br><span class="line">                                              const char* name))</span><br><span class="line">  JVMWrapper2(&quot;JVM_FindClassFromBootLoader %s&quot;, name);</span><br><span class="line"></span><br><span class="line">  &#x2F;&#x2F; Java libraries should ensure that name is never null...</span><br><span class="line">  if (name &#x3D;&#x3D; NULL || (int)strlen(name) &gt; Symbol::max_length()) &#123;</span><br><span class="line">    &#x2F;&#x2F; It&#39;s impossible to create this class;  the name cannot fit</span><br><span class="line">    &#x2F;&#x2F; into the constant pool.</span><br><span class="line">    return NULL;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  TempNewSymbol h_name &#x3D; SymbolTable::new_symbol(name, CHECK_NULL);</span><br><span class="line">  Klass* k &#x3D; SystemDictionary::resolve_or_null(h_name, CHECK_NULL);</span><br><span class="line">  if (k &#x3D;&#x3D; NULL) &#123;</span><br><span class="line">    return NULL;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if (TraceClassResolution) &#123;</span><br><span class="line">    trace_class_resolution(k);</span><br><span class="line">  &#125;</span><br><span class="line">  return (jclass) JNIHandles::make_local(env, k-&gt;java_mirror());</span><br><span class="line">JVM_END</span><br></pre></td></tr></table></figure>
+
+<p>这套逻辑做的事情就是通过启动类加载器加载类sun.launcher.LauncherHelper，执行该类的方法checkAndLoadMain，加载main函数所在的类，启动扩展类加载器、应用类加载器也是在这个时候完成的</p>
+<h4 id="扩展类加载器"><a href="#扩展类加载器" class="headerlink" title="扩展类加载器"></a>扩展类加载器</h4><p>查看类加载器加载的路径</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String[] args) &#123;</span><br><span class="line">    ClassLoader classLoader &#x3D; ClassLoader.getSystemClassLoader().getParent();</span><br><span class="line"></span><br><span class="line">    URLClassLoader urlClassLoader &#x3D; (URLClassLoader) classLoader;</span><br><span class="line"></span><br><span class="line">    URL[] urls &#x3D; urlClassLoader.getURLs();</span><br><span class="line">    for (URL url : urls) &#123;</span><br><span class="line">        System.out.println(url);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以通过java.ext.dirs指定</p>
+<h4 id="应用类加载器"><a href="#应用类加载器" class="headerlink" title="应用类加载器"></a>应用类加载器</h4><p>默认加载用户程序的类加载器</p>
+<p>查看类加载器加载的路径</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String[] args) &#123;</span><br><span class="line">    String[] urls &#x3D; System.getProperty(&quot;java.class.path&quot;).split(&quot;:&quot;);</span><br><span class="line"></span><br><span class="line">    for (String url : urls) &#123;</span><br><span class="line">        System.out.println(url);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    System.out.println(&quot;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&quot;);</span><br><span class="line"></span><br><span class="line">    URLClassLoader classLoader &#x3D; (URLClassLoader) ClassLoader.getSystemClassLoader();</span><br><span class="line"></span><br><span class="line">    URL[] urls1 &#x3D; classLoader.getURLs();</span><br><span class="line">    for (URL url : urls1) &#123;</span><br><span class="line">        System.out.println(url);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以通过java.class.path指定</p>
+<h4 id="自定义类加载器"><a href="#自定义类加载器" class="headerlink" title="自定义类加载器"></a>自定义类加载器</h4><p>继承类java.lang.ClassLoader</p>
+<p><strong>具体细节见课堂上操作实战</strong></p>
+<p><strong>线程上下文类加载器</strong></p>
+<h2 id="类加载器创建链"><a href="#类加载器创建链" class="headerlink" title="类加载器创建链"></a>类加载器创建链</h2><p>上面已经讲了启动类加载器没有实体，只是将一段加载逻辑命名成启动类加载器。启动类加载器做的事情是：加载类sun.launcher.LauncherHelper，执行该类的方法checkAndLoadMain……启动类、扩展类、应用类加载器逻辑上的父子关系就是在这个方法的调用链中生成的？</p>
+<p>1、\openjdk\jdk\src\share\classes\sun\launcher\LauncherHelper.java</p>
+<p>核心代码：ClassLoader.getSystemClassLoader();</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public enum LauncherHelper &#123;</span><br><span class="line">……</span><br><span class="line">	private static final ClassLoader scloader &#x3D; ClassLoader.getSystemClassLoader();</span><br><span class="line">……</span><br><span class="line">    public static Class&lt;?&gt; checkAndLoadMain(boolean printToStderr,</span><br><span class="line">                                            int mode,</span><br><span class="line">                                            String what) &#123;</span><br><span class="line">        ……</span><br><span class="line">        mainClass &#x3D; scloader.loadClass(cn);</span><br><span class="line">    	……</span><br></pre></td></tr></table></figure>
+
+<p>2、\openjdk\jdk\src\share\classes\java\lang\ClassLoader.java</p>
+<p>核心代码：sun.misc.Launcher.getLauncher();</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">   public static ClassLoader getSystemClassLoader() &#123;</span><br><span class="line">       initSystemClassLoader();</span><br><span class="line">       if (scl &#x3D;&#x3D; null) &#123;</span><br><span class="line">           return null;</span><br><span class="line">       &#125;</span><br><span class="line">       SecurityManager sm &#x3D; System.getSecurityManager();</span><br><span class="line">       if (sm !&#x3D; null) &#123;</span><br><span class="line">           checkClassLoaderPermission(scl, Reflection.getCallerClass());</span><br><span class="line">       &#125;</span><br><span class="line">       return scl;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">private static synchronized void initSystemClassLoader() &#123;</span><br><span class="line">       if (!sclSet) &#123;</span><br><span class="line">           if (scl !&#x3D; null)</span><br><span class="line">               throw new IllegalStateException(&quot;recursive invocation&quot;);</span><br><span class="line">           sun.misc.Launcher l &#x3D; sun.misc.Launcher.getLauncher();</span><br><span class="line">       ……</span><br></pre></td></tr></table></figure>
+
+<p>3、\openjdk\jdk\src\share\classes\sun\misc\Launcher.java</p>
+<p>核心代码：</p>
+<ul>
+<li><p>private static Launcher launcher = new Launcher();</p>
+</li>
+<li><p>extcl = ExtClassLoader.getExtClassLoader();</p>
+</li>
+<li><p>loader = AppClassLoader.getAppClassLoader(extcl);</p>
+</li>
+<li><p>Thread.currentThread().setContextClassLoader(loader);</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">public class Launcher &#123;</span><br><span class="line">    private static URLStreamHandlerFactory factory &#x3D; new Factory();</span><br><span class="line">    private static Launcher launcher &#x3D; new Launcher();</span><br><span class="line">    private static String bootClassPath &#x3D;</span><br><span class="line">        System.getProperty(&quot;sun.boot.class.path&quot;);</span><br><span class="line"></span><br><span class="line">    public static Launcher getLauncher() &#123;</span><br><span class="line">        return launcher;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private ClassLoader loader;</span><br><span class="line"></span><br><span class="line">    public Launcher() &#123;</span><br><span class="line">        &#x2F;&#x2F; Create the extension class loader</span><br><span class="line">        ClassLoader extcl;</span><br><span class="line">        try &#123;</span><br><span class="line">            extcl &#x3D; ExtClassLoader.getExtClassLoader();</span><br><span class="line">        &#125; catch (IOException e) &#123;</span><br><span class="line">            throw new InternalError(</span><br><span class="line">                &quot;Could not create extension class loader&quot;, e);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; Now create the class loader to use to launch the application</span><br><span class="line">        try &#123;</span><br><span class="line">            loader &#x3D; AppClassLoader.getAppClassLoader(extcl);</span><br><span class="line">        &#125; catch (IOException e) &#123;</span><br><span class="line">            throw new InternalError(</span><br><span class="line">                &quot;Could not create application class loader&quot;, e);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; Also set the context class loader for the primordial thread.</span><br><span class="line">        Thread.currentThread().setContextClassLoader(loader);</span><br><span class="line">    ……</span><br></pre></td></tr></table></figure>
+
+<p>4、扩展类加载器的创建流程</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">public static ExtClassLoader getExtClassLoader() throws IOException</span><br><span class="line">        &#123;</span><br><span class="line">       ……</span><br><span class="line">                            return new ExtClassLoader(dirs);</span><br><span class="line">  ……</span><br><span class="line">  </span><br><span class="line">  public ExtClassLoader(File[] dirs) throws IOException &#123;</span><br><span class="line">            super(getExtURLs(dirs), null, factory);</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">   URLClassLoader(URL[] urls, ClassLoader parent,</span><br><span class="line">                   AccessControlContext acc) &#123;</span><br></pre></td></tr></table></figure>
+
+<p>第二个参数传的是null，其实就是parent=null</p>
+<p>5、应用类加载器的创建流程</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public static ClassLoader getAppClassLoader(final ClassLoader extcl)</span><br><span class="line">            throws IOException &#123;</span><br><span class="line">    final String s &#x3D; System.getProperty(&quot;java.class.path&quot;);</span><br><span class="line">    final File[] path &#x3D; (s &#x3D;&#x3D; null) ? new File[0] : getClassPath(s);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; Note: on bugid 4256530</span><br><span class="line">    &#x2F;&#x2F; Prior implementations of this doPrivileged() block supplied</span><br><span class="line">    &#x2F;&#x2F; a rather restrictive ACC via a call to the private method</span><br><span class="line">    &#x2F;&#x2F; AppClassLoader.getContext(). This proved overly restrictive</span><br><span class="line">    &#x2F;&#x2F; when loading  classes. Specifically it prevent</span><br><span class="line">    &#x2F;&#x2F; accessClassInPackage.sun.* grants from being honored.</span><br><span class="line">    &#x2F;&#x2F;</span><br><span class="line">    return AccessController.doPrivileged(</span><br><span class="line">        new PrivilegedAction&lt;AppClassLoader&gt;() &#123;</span><br><span class="line">            public AppClassLoader run() &#123;</span><br><span class="line">                URL[] urls &#x3D;</span><br><span class="line">                    (s &#x3D;&#x3D; null) ? new URL[0] : pathToURLs(path);</span><br><span class="line">                return new AppClassLoader(urls, extcl);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">&#125;</span><br><span class="line">        </span><br><span class="line">AppClassLoader(URL[] urls, ClassLoader parent) &#123;</span><br><span class="line">    super(urls, parent, factory);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>应用类、扩展类加载器的父子关系就是这样建立的</p>
+<h2 id="类加载器加载的类如何存储"><a href="#类加载器加载的类如何存储" class="headerlink" title="类加载器加载的类如何存储"></a>类加载器加载的类如何存储</h2><p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596463976492-938880f6-1716-42dd-bcde-4633bca14ebb.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="img"></p>
+<h2 id="双亲委派"><a href="#双亲委派" class="headerlink" title="双亲委派"></a>双亲委派</h2><p>如果一个类加载器收到了加载某个类的请求,则该类加载器并不会去加载该类,而是把这个请求委派给父类加载器,每一个层次的类加载器都是如此,因此所有的类加载请求最终都会传送到顶端的启动类加载器;只有当父类加载器在其搜索范围内无法找到所需的类,并将该结果反馈给子类加载器,子类加载器会尝试去自己加载。</p>
+<p>每个类加载器的搜索范围上面已经讲过了</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596180175129-101a7451-64b8-4d6a-8ae9-49f915f6df34.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="img"></p>
+<h2 id="打破双亲委派"><a href="#打破双亲委派" class="headerlink" title="打破双亲委派"></a>打破双亲委派</h2><p>因为在某些情况下父类加载器需要委托子类加载器去加载class文件。受到加载范围的限制，父类加载器无法加载到需要的文件，以Driver接口为例，由于Driver接口定义在jdk当中的，而其实现由各个数据库的服务商来提供，比如mysql的就写了<code>MySQL Connector</code>，那么问题就来了，DriverManager（也由jdk提供）要加载各个实现了Driver接口的实现类，然后进行管理，但是DriverManager由启动类加载器加载，只能记载JAVA_HOME的lib下文件，而其实现是由服务商提供的，由系统类加载器加载，这个时候就需要启动类加载器来委托子类来加载Driver实现，从而破坏了双亲委派。</p>
+<p>类似这样的情况就需要打破双亲委派。</p>
+<p>打破双亲委派的意思其实就是不委派、向下委派</p>
+<h3 id="自定义类加载器-1"><a href="#自定义类加载器-1" class="headerlink" title="自定义类加载器"></a>自定义类加载器</h3><p><strong>具体细节见课堂上操作实战</strong></p>
+<h3 id="SPI"><a href="#SPI" class="headerlink" title="SPI"></a>SPI</h3><p>是一种服务发现机制。它通过在ClassPath路径下的META-INF/services文件夹查找文件，自动加载文件里所定义的类。这一机制为很多框架扩展提供了可能，比如在Dubbo、JDBC中都使用到了SPI机制</p>
+<p><strong>具体细节见课堂上操作实战</strong></p>
+<h2 id="线程上下文类加载器"><a href="#线程上下文类加载器" class="headerlink" title="线程上下文类加载器"></a>线程上下文类加载器</h2><p>1、是什么</p>
+<p>一种特殊的类加载器，可以通过Thread获取，基于此可实现逆向委托加载</p>
+<p>2、为什么</p>
+<p>为了解决双亲委派的缺陷而生</p>
+<p>3、怎么做</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;获取</span><br><span class="line">Thread.currentThread().getContextClassLoader()</span><br><span class="line">    </span><br><span class="line">&#x2F;&#x2F; 设置</span><br><span class="line">Thread.currentThread().setContextClassLoader(new Classloader_4());</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="沙箱安全"><a href="#沙箱安全" class="headerlink" title="沙箱安全"></a>沙箱安全</h2><p>跟Linux的权限机制有点像</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186739409-9de7875f-b980-40cf-a392-e7218ee1a7d8.png" alt="img"></p>
+<hr>
+<p>看openjdk源码会看到有这样的判断AccessController.doPrivileged</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186486602-8ec36a19-d6c9-4914-967c-a223ba45aafb.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="img"></p>
+<hr>
+<p>随便搜了一下，35个文件有80处安全判断</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186837719-26edf8c5-2f06-489d-89cf-80ac278e51f6.png" alt="img"></p>
+<hr>
+<p>比如我定义了一个类名为String所在包为java.lang，因为这个类本来是属于jdk的，如果没有沙箱安全机制的话，这个类将会污染到我所有的String,但是由于沙箱安全机制，所以就委托顶层的bootstrap加载器查找这个类，如果没有的话就委托extsion,extsion没有就到aapclassloader，但是由于String就是jdk的源代码，所以在bootstrap那里就加载到了，先找到先使用，所以就使用bootstrap里面的String,后面的一概不能使用，这就保证了不被恶意代码污染</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186237329-9d5d9073-ce88-4836-8a5c-f6c5be51aeef.png" alt="img"></p>
+<h2 id="练习"><a href="#练习" class="headerlink" title="练习"></a>练习</h2>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://www.oracp.com/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/" data-id="cktn11xh40004u02j7eqmflo2" data-title="jvm2类加载器子系统与SPI" class="article-share-link">Teilen</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2021/09/16/%E4%BD%99%E7%94%9F%E6%89%80%E9%81%87%E4%B9%8B%E4%BA%BA%EF%BC%8C%E9%83%BD%E6%98%AF%E5%A5%BD%E4%BA%BA/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Älter</strong>
+      <div class="article-nav-title">余生所遇之人，都是好人</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/JVM/" rel="tag">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E4%BA%BA%E7%94%9F%E6%84%9F%E6%82%9F/" rel="tag">人生感悟</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/%E4%BA%BA%E7%94%9F%E6%84%9F%E6%82%9F/" style="font-size: 20px;">人生感悟</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archiv</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">February 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/09/">September 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">January 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">November 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">letzter Beitrag</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/">jvm2类加载器子系统与SPI</a>
+          </li>
+        
+          <li>
+            <a href="/2021/09/16/%E4%BD%99%E7%94%9F%E6%89%80%E9%81%87%E4%B9%8B%E4%BA%BA%EF%BC%8C%E9%83%BD%E6%98%AF%E5%A5%BD%E4%BA%BA/">余生所遇之人，都是好人</a>
+          </li>
+        
+          <li>
+            <a href="/2021/02/26/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2020/09/15/%E4%BA%BA%E7%9A%84%E8%BF%99%E4%B8%80%E7%94%9F/">人的这一生</a>
+          </li>
+        
+          <li>
+            <a href="/2019/11/16/%E5%AF%B9%E5%BE%85%E5%AD%A4%E7%8B%AC/">对待孤独</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2021 Zhiqiang Shen<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
