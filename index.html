@@ -105,8 +105,7 @@
 <h2 id="类加载器"><a href="#类加载器" class="headerlink" title="类加载器"></a>类加载器</h2><p>JVM中有两种类型的类加载器，由C++编写的及由Java编写的。除了启动类加载器（Bootstrap Class Loader）是由C++编写的，其他都是由Java编写的。由Java编写的类加载器都继承自类java.lang.ClassLoader。</p>
 <p>JVM还支持自定义类加载器。后面会将。</p>
 <p>各种类加载器之间存在着逻辑上的父子关系，但不是真正意义上的父子关系，因为它们直接没有从属关系。</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596175705729-ab0a19e3-d881-48fb-8b68-426b0e6c34e1.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="img"></p>
-<p><img src="./jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/1596175705729-ab0a19e3-d881-48fb-8b68-426b0e6c34e1.png" alt="1596175705729-ab0a19e3-d881-48fb-8b68-426b0e6c34e1"></p>
+<p><img src="/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/0000056666.png" alt="0000056666"></p>
 <h4 id="启动类加载器"><a href="#启动类加载器" class="headerlink" title="启动类加载器"></a>启动类加载器</h4><p>因为启动类加载器是由C++编写的，通过Java程序去查看显示的是null</p>
 <p>因此，启动类加载器无法被Java程序调用</p>
 <p>启动类加载器不像其他类加载器有实体，它是没有实体的，JVM将C++处理类加载的一套逻辑定义为启动类加载器</p>
@@ -165,10 +164,8 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public static ClassLoader getAppClassLoader(final ClassLoader extcl)</span><br><span class="line">            throws IOException &#123;</span><br><span class="line">    final String s &#x3D; System.getProperty(&quot;java.class.path&quot;);</span><br><span class="line">    final File[] path &#x3D; (s &#x3D;&#x3D; null) ? new File[0] : getClassPath(s);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; Note: on bugid 4256530</span><br><span class="line">    &#x2F;&#x2F; Prior implementations of this doPrivileged() block supplied</span><br><span class="line">    &#x2F;&#x2F; a rather restrictive ACC via a call to the private method</span><br><span class="line">    &#x2F;&#x2F; AppClassLoader.getContext(). This proved overly restrictive</span><br><span class="line">    &#x2F;&#x2F; when loading  classes. Specifically it prevent</span><br><span class="line">    &#x2F;&#x2F; accessClassInPackage.sun.* grants from being honored.</span><br><span class="line">    &#x2F;&#x2F;</span><br><span class="line">    return AccessController.doPrivileged(</span><br><span class="line">        new PrivilegedAction&lt;AppClassLoader&gt;() &#123;</span><br><span class="line">            public AppClassLoader run() &#123;</span><br><span class="line">                URL[] urls &#x3D;</span><br><span class="line">                    (s &#x3D;&#x3D; null) ? new URL[0] : pathToURLs(path);</span><br><span class="line">                return new AppClassLoader(urls, extcl);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">&#125;</span><br><span class="line">        </span><br><span class="line">AppClassLoader(URL[] urls, ClassLoader parent) &#123;</span><br><span class="line">    super(urls, parent, factory);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>应用类、扩展类加载器的父子关系就是这样建立的</p>
-<h2 id="类加载器加载的类如何存储"><a href="#类加载器加载的类如何存储" class="headerlink" title="类加载器加载的类如何存储"></a>类加载器加载的类如何存储</h2><p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596463976492-938880f6-1716-42dd-bcde-4633bca14ebb.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="img"></p>
-<h2 id="双亲委派"><a href="#双亲委派" class="headerlink" title="双亲委派"></a>双亲委派</h2><p>如果一个类加载器收到了加载某个类的请求,则该类加载器并不会去加载该类,而是把这个请求委派给父类加载器,每一个层次的类加载器都是如此,因此所有的类加载请求最终都会传送到顶端的启动类加载器;只有当父类加载器在其搜索范围内无法找到所需的类,并将该结果反馈给子类加载器,子类加载器会尝试去自己加载。</p>
+<h2 id="类加载器加载的类如何存储"><a href="#类加载器加载的类如何存储" class="headerlink" title="类加载器加载的类如何存储"></a>类加载器加载的类如何存储</h2><h2 id="双亲委派"><a href="#双亲委派" class="headerlink" title="双亲委派"></a>双亲委派</h2><p>如果一个类加载器收到了加载某个类的请求,则该类加载器并不会去加载该类,而是把这个请求委派给父类加载器,每一个层次的类加载器都是如此,因此所有的类加载请求最终都会传送到顶端的启动类加载器;只有当父类加载器在其搜索范围内无法找到所需的类,并将该结果反馈给子类加载器,子类加载器会尝试去自己加载。</p>
 <p>每个类加载器的搜索范围上面已经讲过了</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596180175129-101a7451-64b8-4d6a-8ae9-49f915f6df34.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="img"></p>
 <h2 id="打破双亲委派"><a href="#打破双亲委派" class="headerlink" title="打破双亲委派"></a>打破双亲委派</h2><p>因为在某些情况下父类加载器需要委托子类加载器去加载class文件。受到加载范围的限制，父类加载器无法加载到需要的文件，以Driver接口为例，由于Driver接口定义在jdk当中的，而其实现由各个数据库的服务商来提供，比如mysql的就写了<code>MySQL Connector</code>，那么问题就来了，DriverManager（也由jdk提供）要加载各个实现了Driver接口的实现类，然后进行管理，但是DriverManager由启动类加载器加载，只能记载JAVA_HOME的lib下文件，而其实现是由服务商提供的，由系统类加载器加载，这个时候就需要启动类加载器来委托子类来加载Driver实现，从而破坏了双亲委派。</p>
 <p>类似这样的情况就需要打破双亲委派。</p>
 <p>打破双亲委派的意思其实就是不委派、向下委派</p>
@@ -185,21 +182,17 @@
 
 
 <h2 id="沙箱安全"><a href="#沙箱安全" class="headerlink" title="沙箱安全"></a>沙箱安全</h2><p>跟Linux的权限机制有点像</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186739409-9de7875f-b980-40cf-a392-e7218ee1a7d8.png" alt="img"></p>
 <hr>
 <p>看openjdk源码会看到有这样的判断AccessController.doPrivileged</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186486602-8ec36a19-d6c9-4914-967c-a223ba45aafb.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="img"></p>
 <hr>
 <p>随便搜了一下，35个文件有80处安全判断</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186837719-26edf8c5-2f06-489d-89cf-80ac278e51f6.png" alt="img"></p>
 <hr>
 <p>比如我定义了一个类名为String所在包为java.lang，因为这个类本来是属于jdk的，如果没有沙箱安全机制的话，这个类将会污染到我所有的String,但是由于沙箱安全机制，所以就委托顶层的bootstrap加载器查找这个类，如果没有的话就委托extsion,extsion没有就到aapclassloader，但是由于String就是jdk的源代码，所以在bootstrap那里就加载到了，先找到先使用，所以就使用bootstrap里面的String,后面的一概不能使用，这就保证了不被恶意代码污染</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186237329-9d5d9073-ce88-4836-8a5c-f6c5be51aeef.png" alt="img"></p>
 <h2 id="练习"><a href="#练习" class="headerlink" title="练习"></a>练习</h2>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/" data-id="cktn12ohy0002ms2j62wqh9gs" data-title="jvm2类加载器子系统与SPI" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/" data-id="cktn3956b0004wo2j5r0z3w0l" data-title="jvm2类加载器子系统与SPI" class="article-share-link">Teilen</a>
       
       
       
@@ -238,7 +231,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2021/09/16/%E4%BD%99%E7%94%9F%E6%89%80%E9%81%87%E4%B9%8B%E4%BA%BA%EF%BC%8C%E9%83%BD%E6%98%AF%E5%A5%BD%E4%BA%BA/" data-id="cktn12oi20006ms2jc716gl56" data-title="余生所遇之人，都是好人" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2021/09/16/%E4%BD%99%E7%94%9F%E6%89%80%E9%81%87%E4%B9%8B%E4%BA%BA%EF%BC%8C%E9%83%BD%E6%98%AF%E5%A5%BD%E4%BA%BA/" data-id="cktn3956d0008wo2j3oexbgmq" data-title="余生所遇之人，都是好人" class="article-share-link">Teilen</a>
       
       
       
@@ -291,7 +284,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2021/02/26/hello-world/" data-id="cktn12ohs0000ms2jfsn20if5" data-title="Hello World" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2021/02/26/hello-world/" data-id="cktn395670001wo2jewnd8wz0" data-title="Hello World" class="article-share-link">Teilen</a>
       
       
       
@@ -332,7 +325,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2020/09/15/%E4%BA%BA%E7%9A%84%E8%BF%99%E4%B8%80%E7%94%9F/" data-id="cktn12oi10005ms2jeuxlf6aq" data-title="人的这一生" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2020/09/15/%E4%BA%BA%E7%9A%84%E8%BF%99%E4%B8%80%E7%94%9F/" data-id="cktn3956c0005wo2j8b9l97ga" data-title="人的这一生" class="article-share-link">Teilen</a>
       
       
       
@@ -373,7 +366,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2019/11/16/%E5%AF%B9%E5%BE%85%E5%AD%A4%E7%8B%AC/" data-id="cktn12oi30009ms2j9wgf4y4h" data-title="对待孤独" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2019/11/16/%E5%AF%B9%E5%BE%85%E5%AD%A4%E7%8B%AC/" data-id="cktn3956e000awo2jcipz33o9" data-title="对待孤独" class="article-share-link">Teilen</a>
       
       
       
@@ -415,7 +408,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2019/08/26/%E6%93%8D%E4%BD%9Cjar%E5%8C%85%E5%86%85%E6%96%87%E4%BB%B6%E4%BB%A5%E5%8F%8Ajar%E5%8C%85%E5%86%85jar%E5%8C%85%E9%87%8C%E6%96%87%E4%BB%B6%E7%9A%84%E6%96%B9%E6%B3%95/" data-id="cktn12oia000hms2j4e9qequw" data-title="操作jar包内文件以及jar包内jar包里文件的方法" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2019/08/26/%E6%93%8D%E4%BD%9Cjar%E5%8C%85%E5%86%85%E6%96%87%E4%BB%B6%E4%BB%A5%E5%8F%8Ajar%E5%8C%85%E5%86%85jar%E5%8C%85%E9%87%8C%E6%96%87%E4%BB%B6%E7%9A%84%E6%96%B9%E6%B3%95/" data-id="cktn3956h000fwo2j8j9p9tae" data-title="操作jar包内文件以及jar包内jar包里文件的方法" class="article-share-link">Teilen</a>
       
       
       
@@ -454,7 +447,7 @@
 <p><strong>课堂上会有操作实战</strong></p>
 <h2 id="klass模型"><a href="#klass模型" class="headerlink" title="klass模型"></a>klass模型</h2><p>Java的每个类，在JVM中，都有一个对应的Klass类实例与之对应，存储类的元信息如：常量池、属性信息、方法信息……</p>
 <p>看下klass模型类的继承结构</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596173104706-a25dfc25-bbe2-446f-82f1-90372f73179d.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="img"></p>
+<p><img src alt="img"></p>
 <p>从继承关系上也能看出来，类的元信息是存储在原空间的</p>
 <p>普通的Java类在JVM中对应的是instanceKlass类的实例，再来说下它的三个字类</p>
 <ol>
@@ -471,7 +464,7 @@
 <li>ObjArrayKlass：用于表示引用类型的数组</li>
 </ol>
 <h2 id="类加载的过程"><a href="#类加载的过程" class="headerlink" title="类加载的过程"></a>类加载的过程</h2><p>类加载由7个步骤完成，看图</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596174379864-42689336-ec0c-487d-859c-28dec30f0721.png" alt="img"></p>
+<p><img src alt="img"></p>
 <h3 id="加载"><a href="#加载" class="headerlink" title="加载"></a>加载</h3><p>1、通过类的全限定名获取存储该类的class文件（没有指明必须从哪获取）</p>
 <p>2、解析成运行时数据，即instanceKlass实例，存放在方法区</p>
 <p>3、在堆区生成该类的Class对象，即instanceMirrorKlass实例</p>
@@ -500,7 +493,7 @@
 <p>4、符号引用验证</p>
 <h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>为静态变量分配内存、赋初值</p>
 <p>实例变量是在创建对象的时候完成赋值的，没有赋初值一说</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596174636413-c890999d-28ba-4d20-a5d5-c95eaf263d04.png" alt="img"></p>
+<p><img src alt="img"></p>
 <p>如果被final修饰，在编译的时候会给属性添加ConstantValue属性，准备阶段直接完成赋值，即没有赋初值这一步</p>
 <h3 id="解析"><a href="#解析" class="headerlink" title="解析"></a>解析</h3><p>将常量池中的符号引用转为直接引用</p>
 <p>解析后的信息存储在ConstantPoolCache类实例中</p>
@@ -522,7 +515,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2019/01/11/jvm1%E5%B8%A6%E4%BD%A0%E6%8E%A2%E7%B4%A2JVM%E5%BA%95%E5%B1%82%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD/" data-id="cktn12ohx0001ms2j67nbae7q" data-title="jvm1带你探索JVM底层之类加载" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2019/01/11/jvm1%E5%B8%A6%E4%BD%A0%E6%8E%A2%E7%B4%A2JVM%E5%BA%95%E5%B1%82%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD/" data-id="cktn3956a0003wo2j52sk508l" data-title="jvm1带你探索JVM底层之类加载" class="article-share-link">Teilen</a>
       
       
       
@@ -565,7 +558,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2018/11/16/20%E5%88%B030%E5%B2%81/" data-id="cktn12oi00004ms2j76ygg2jf" data-title="20到30岁" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2018/11/16/20%E5%88%B030%E5%B2%81/" data-id="cktn395620000wo2j7h107g7e" data-title="20到30岁" class="article-share-link">Teilen</a>
       
       
       
@@ -744,7 +737,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2018/11/16/%E6%AF%95%E4%B8%9A%E5%90%8E%E6%88%91%E4%BB%AC%E4%B8%A2%E5%A4%B1%E7%9A%84%E4%B8%89%E4%BB%B6%E4%B8%9C%E8%A5%BF/" data-id="cktn12oi8000gms2jbb9k2wnh" data-title="毕业后我们丢失的三件东西" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2018/11/16/%E6%AF%95%E4%B8%9A%E5%90%8E%E6%88%91%E4%BB%AC%E4%B8%A2%E5%A4%B1%E7%9A%84%E4%B8%89%E4%BB%B6%E4%B8%9C%E8%A5%BF/" data-id="cktn3956h000ewo2jd2w9gu6p" data-title="毕业后我们丢失的三件东西" class="article-share-link">Teilen</a>
       
       
       

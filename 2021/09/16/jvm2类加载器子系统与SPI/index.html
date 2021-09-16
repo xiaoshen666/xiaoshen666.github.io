@@ -13,19 +13,12 @@
 <meta property="og:site_name" content="小神的博客">
 <meta property="og:description" content="类加载器子系统分两节课讲解：类加载、类加载器 上节课已经深入讲解了类加载，这节课开始讲解类加载器 类加载器子系统 &#x3D; 三层类加载器 + 双亲委派 类加载器JVM中有两种类型的类加载器，由C++编写的及由Java编写的。除了启动类加载器（Bootstrap Class Loader）是由C++编写的，其他都是由Java编写的。由Java编写的类加载器都继承自类java.lang.ClassLoade">
 <meta property="og:locale">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596175705729-ab0a19e3-d881-48fb-8b68-426b0e6c34e1.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
-<meta property="og:image" content="http://www.oracp.com/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/1596175705729-ab0a19e3-d881-48fb-8b68-426b0e6c34e1.png">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596463976492-938880f6-1716-42dd-bcde-4633bca14ebb.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596180175129-101a7451-64b8-4d6a-8ae9-49f915f6df34.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186739409-9de7875f-b980-40cf-a392-e7218ee1a7d8.png">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186486602-8ec36a19-d6c9-4914-967c-a223ba45aafb.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186837719-26edf8c5-2f06-489d-89cf-80ac278e51f6.png">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186237329-9d5d9073-ce88-4836-8a5c-f6c5be51aeef.png">
+<meta property="og:image" content="http://www.oracp.com/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/0000056666.png">
 <meta property="article:published_time" content="2021-09-16T14:25:09.000Z">
-<meta property="article:modified_time" content="2021-09-16T14:27:31.904Z">
+<meta property="article:modified_time" content="2021-09-16T15:18:54.238Z">
 <meta property="article:author" content="Zhiqiang Shen">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596175705729-ab0a19e3-d881-48fb-8b68-426b0e6c34e1.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
+<meta name="twitter:image" content="http://www.oracp.com/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/0000056666.png">
   
     <link rel="alternate" href="/atom.xml" title="小神的博客" type="application/atom+xml">
   
@@ -114,8 +107,7 @@
 <h2 id="类加载器"><a href="#类加载器" class="headerlink" title="类加载器"></a>类加载器</h2><p>JVM中有两种类型的类加载器，由C++编写的及由Java编写的。除了启动类加载器（Bootstrap Class Loader）是由C++编写的，其他都是由Java编写的。由Java编写的类加载器都继承自类java.lang.ClassLoader。</p>
 <p>JVM还支持自定义类加载器。后面会将。</p>
 <p>各种类加载器之间存在着逻辑上的父子关系，但不是真正意义上的父子关系，因为它们直接没有从属关系。</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596175705729-ab0a19e3-d881-48fb-8b68-426b0e6c34e1.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="img"></p>
-<p><img src="./jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/1596175705729-ab0a19e3-d881-48fb-8b68-426b0e6c34e1.png" alt="1596175705729-ab0a19e3-d881-48fb-8b68-426b0e6c34e1"></p>
+<p><img src="/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/0000056666.png" alt="0000056666"></p>
 <h4 id="启动类加载器"><a href="#启动类加载器" class="headerlink" title="启动类加载器"></a>启动类加载器</h4><p>因为启动类加载器是由C++编写的，通过Java程序去查看显示的是null</p>
 <p>因此，启动类加载器无法被Java程序调用</p>
 <p>启动类加载器不像其他类加载器有实体，它是没有实体的，JVM将C++处理类加载的一套逻辑定义为启动类加载器</p>
@@ -174,10 +166,8 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public static ClassLoader getAppClassLoader(final ClassLoader extcl)</span><br><span class="line">            throws IOException &#123;</span><br><span class="line">    final String s &#x3D; System.getProperty(&quot;java.class.path&quot;);</span><br><span class="line">    final File[] path &#x3D; (s &#x3D;&#x3D; null) ? new File[0] : getClassPath(s);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; Note: on bugid 4256530</span><br><span class="line">    &#x2F;&#x2F; Prior implementations of this doPrivileged() block supplied</span><br><span class="line">    &#x2F;&#x2F; a rather restrictive ACC via a call to the private method</span><br><span class="line">    &#x2F;&#x2F; AppClassLoader.getContext(). This proved overly restrictive</span><br><span class="line">    &#x2F;&#x2F; when loading  classes. Specifically it prevent</span><br><span class="line">    &#x2F;&#x2F; accessClassInPackage.sun.* grants from being honored.</span><br><span class="line">    &#x2F;&#x2F;</span><br><span class="line">    return AccessController.doPrivileged(</span><br><span class="line">        new PrivilegedAction&lt;AppClassLoader&gt;() &#123;</span><br><span class="line">            public AppClassLoader run() &#123;</span><br><span class="line">                URL[] urls &#x3D;</span><br><span class="line">                    (s &#x3D;&#x3D; null) ? new URL[0] : pathToURLs(path);</span><br><span class="line">                return new AppClassLoader(urls, extcl);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">&#125;</span><br><span class="line">        </span><br><span class="line">AppClassLoader(URL[] urls, ClassLoader parent) &#123;</span><br><span class="line">    super(urls, parent, factory);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>应用类、扩展类加载器的父子关系就是这样建立的</p>
-<h2 id="类加载器加载的类如何存储"><a href="#类加载器加载的类如何存储" class="headerlink" title="类加载器加载的类如何存储"></a>类加载器加载的类如何存储</h2><p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596463976492-938880f6-1716-42dd-bcde-4633bca14ebb.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="img"></p>
-<h2 id="双亲委派"><a href="#双亲委派" class="headerlink" title="双亲委派"></a>双亲委派</h2><p>如果一个类加载器收到了加载某个类的请求,则该类加载器并不会去加载该类,而是把这个请求委派给父类加载器,每一个层次的类加载器都是如此,因此所有的类加载请求最终都会传送到顶端的启动类加载器;只有当父类加载器在其搜索范围内无法找到所需的类,并将该结果反馈给子类加载器,子类加载器会尝试去自己加载。</p>
+<h2 id="类加载器加载的类如何存储"><a href="#类加载器加载的类如何存储" class="headerlink" title="类加载器加载的类如何存储"></a>类加载器加载的类如何存储</h2><h2 id="双亲委派"><a href="#双亲委派" class="headerlink" title="双亲委派"></a>双亲委派</h2><p>如果一个类加载器收到了加载某个类的请求,则该类加载器并不会去加载该类,而是把这个请求委派给父类加载器,每一个层次的类加载器都是如此,因此所有的类加载请求最终都会传送到顶端的启动类加载器;只有当父类加载器在其搜索范围内无法找到所需的类,并将该结果反馈给子类加载器,子类加载器会尝试去自己加载。</p>
 <p>每个类加载器的搜索范围上面已经讲过了</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596180175129-101a7451-64b8-4d6a-8ae9-49f915f6df34.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="img"></p>
 <h2 id="打破双亲委派"><a href="#打破双亲委派" class="headerlink" title="打破双亲委派"></a>打破双亲委派</h2><p>因为在某些情况下父类加载器需要委托子类加载器去加载class文件。受到加载范围的限制，父类加载器无法加载到需要的文件，以Driver接口为例，由于Driver接口定义在jdk当中的，而其实现由各个数据库的服务商来提供，比如mysql的就写了<code>MySQL Connector</code>，那么问题就来了，DriverManager（也由jdk提供）要加载各个实现了Driver接口的实现类，然后进行管理，但是DriverManager由启动类加载器加载，只能记载JAVA_HOME的lib下文件，而其实现是由服务商提供的，由系统类加载器加载，这个时候就需要启动类加载器来委托子类来加载Driver实现，从而破坏了双亲委派。</p>
 <p>类似这样的情况就需要打破双亲委派。</p>
 <p>打破双亲委派的意思其实就是不委派、向下委派</p>
@@ -194,21 +184,17 @@
 
 
 <h2 id="沙箱安全"><a href="#沙箱安全" class="headerlink" title="沙箱安全"></a>沙箱安全</h2><p>跟Linux的权限机制有点像</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186739409-9de7875f-b980-40cf-a392-e7218ee1a7d8.png" alt="img"></p>
 <hr>
 <p>看openjdk源码会看到有这样的判断AccessController.doPrivileged</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186486602-8ec36a19-d6c9-4914-967c-a223ba45aafb.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="img"></p>
 <hr>
 <p>随便搜了一下，35个文件有80处安全判断</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186837719-26edf8c5-2f06-489d-89cf-80ac278e51f6.png" alt="img"></p>
 <hr>
 <p>比如我定义了一个类名为String所在包为java.lang，因为这个类本来是属于jdk的，如果没有沙箱安全机制的话，这个类将会污染到我所有的String,但是由于沙箱安全机制，所以就委托顶层的bootstrap加载器查找这个类，如果没有的话就委托extsion,extsion没有就到aapclassloader，但是由于String就是jdk的源代码，所以在bootstrap那里就加载到了，先找到先使用，所以就使用bootstrap里面的String,后面的一概不能使用，这就保证了不被恶意代码污染</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596186237329-9d5d9073-ce88-4836-8a5c-f6c5be51aeef.png" alt="img"></p>
 <h2 id="练习"><a href="#练习" class="headerlink" title="练习"></a>练习</h2>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/" data-id="cktn12ohy0002ms2j62wqh9gs" data-title="jvm2类加载器子系统与SPI" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2021/09/16/jvm2%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%AD%90%E7%B3%BB%E7%BB%9F%E4%B8%8ESPI/" data-id="cktn3956b0004wo2j5r0z3w0l" data-title="jvm2类加载器子系统与SPI" class="article-share-link">Teilen</a>
       
       
       

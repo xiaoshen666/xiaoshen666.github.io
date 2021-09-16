@@ -13,15 +13,11 @@
 <meta property="og:site_name" content="小神的博客">
 <meta property="og:description" content="类加载器子系统分两节课讲解：类加载、类加载器 本节课深入讲解类加载，分四PA来讲。 课堂上会有操作实战 klass模型Java的每个类，在JVM中，都有一个对应的Klass类实例与之对应，存储类的元信息如：常量池、属性信息、方法信息…… 看下klass模型类的继承结构  从继承关系上也能看出来，类的元信息是存储在原空间的 普通的Java类在JVM中对应的是instanceKlass类的实例，再来说">
 <meta property="og:locale">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596173104706-a25dfc25-bbe2-446f-82f1-90372f73179d.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596174379864-42689336-ec0c-487d-859c-28dec30f0721.png">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596174636413-c890999d-28ba-4d20-a5d5-c95eaf263d04.png">
 <meta property="article:published_time" content="2019-01-11T14:14:16.000Z">
-<meta property="article:modified_time" content="2021-09-16T14:15:03.252Z">
+<meta property="article:modified_time" content="2021-09-16T14:31:03.571Z">
 <meta property="article:author" content="Zhiqiang Shen">
 <meta property="article:tag" content="JVM">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596173104706-a25dfc25-bbe2-446f-82f1-90372f73179d.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10">
   
     <link rel="alternate" href="/atom.xml" title="小神的博客" type="application/atom+xml">
   
@@ -109,7 +105,7 @@
 <p><strong>课堂上会有操作实战</strong></p>
 <h2 id="klass模型"><a href="#klass模型" class="headerlink" title="klass模型"></a>klass模型</h2><p>Java的每个类，在JVM中，都有一个对应的Klass类实例与之对应，存储类的元信息如：常量池、属性信息、方法信息……</p>
 <p>看下klass模型类的继承结构</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596173104706-a25dfc25-bbe2-446f-82f1-90372f73179d.png?x-oss-process=image/watermark,type_d3F5LW1pY3JvaGVp,size_10,text_6bKB54-t5a2m6Zmi5Ye65ZOB,color_FFFFFF,shadow_50,t_80,g_se,x_10,y_10" alt="img"></p>
+<p><img src alt="img"></p>
 <p>从继承关系上也能看出来，类的元信息是存储在原空间的</p>
 <p>普通的Java类在JVM中对应的是instanceKlass类的实例，再来说下它的三个字类</p>
 <ol>
@@ -126,7 +122,7 @@
 <li>ObjArrayKlass：用于表示引用类型的数组</li>
 </ol>
 <h2 id="类加载的过程"><a href="#类加载的过程" class="headerlink" title="类加载的过程"></a>类加载的过程</h2><p>类加载由7个步骤完成，看图</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596174379864-42689336-ec0c-487d-859c-28dec30f0721.png" alt="img"></p>
+<p><img src alt="img"></p>
 <h3 id="加载"><a href="#加载" class="headerlink" title="加载"></a>加载</h3><p>1、通过类的全限定名获取存储该类的class文件（没有指明必须从哪获取）</p>
 <p>2、解析成运行时数据，即instanceKlass实例，存放在方法区</p>
 <p>3、在堆区生成该类的Class对象，即instanceMirrorKlass实例</p>
@@ -155,7 +151,7 @@
 <p>4、符号引用验证</p>
 <h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>为静态变量分配内存、赋初值</p>
 <p>实例变量是在创建对象的时候完成赋值的，没有赋初值一说</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2020/png/2179815/1596174636413-c890999d-28ba-4d20-a5d5-c95eaf263d04.png" alt="img"></p>
+<p><img src alt="img"></p>
 <p>如果被final修饰，在编译的时候会给属性添加ConstantValue属性，准备阶段直接完成赋值，即没有赋初值这一步</p>
 <h3 id="解析"><a href="#解析" class="headerlink" title="解析"></a>解析</h3><p>将常量池中的符号引用转为直接引用</p>
 <p>解析后的信息存储在ConstantPoolCache类实例中</p>
@@ -177,7 +173,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://www.oracp.com/2019/01/11/jvm1%E5%B8%A6%E4%BD%A0%E6%8E%A2%E7%B4%A2JVM%E5%BA%95%E5%B1%82%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD/" data-id="cktn12ohx0001ms2j67nbae7q" data-title="jvm1带你探索JVM底层之类加载" class="article-share-link">Teilen</a>
+      <a data-url="http://www.oracp.com/2019/01/11/jvm1%E5%B8%A6%E4%BD%A0%E6%8E%A2%E7%B4%A2JVM%E5%BA%95%E5%B1%82%E4%B9%8B%E7%B1%BB%E5%8A%A0%E8%BD%BD/" data-id="cktn3956a0003wo2j52sk508l" data-title="jvm1带你探索JVM底层之类加载" class="article-share-link">Teilen</a>
       
       
       
